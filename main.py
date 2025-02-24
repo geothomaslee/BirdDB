@@ -6,20 +6,22 @@ Created on Fri Feb 21 21:05:45 2025
 """
 
 from birddb.database import getBirdDataBase
-from birddb.plotting import plot_order, plot_family, plot_most_photographed
+from birddb.plotting import plot_orders, plot_families, plot_genuses, plot_most_photographed
 import polars as pl
 
-db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=True)
+db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
+#db.add_unsorted_to_database(ebird='https://ebird.org/checklist/S215103770')
+#db.sort()
+#db.save()
 
-db.add_unsorted_to_database(ebird='https://ebird.org/checklist/S210041434')
-db.sort()
-db.save()
+#print(db.df)
 
-print(db.df)
 
 #plot_order(db,mode='photos')
 #plot_order(db,mode='species')
-#plot_family(db,'Pelecaniformes',mode='photos')
-#plot_most_photographed(db)
+#plot_families(db,'Anseriformes',mode='photos')
+#plot_genuses(db,'Anatidae',mode='photos')
+plot_most_photographed(db,20)
+
 
 
