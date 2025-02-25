@@ -4,10 +4,12 @@ Created on Fri Feb 21 21:05:45 2025
 
 @author: tlee
 """
-
 from birddb.database import getBirdDataBase
 from birddb.plotting import plot_orders, plot_families, plot_genuses, plot_most_photographed
+from birddb.plotting import plot_order_comp, plotPhyloTree
 import polars as pl
+
+import matplotlib.pyplot as plt
 
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
 #db.add_unsorted_to_database(ebird='https://ebird.org/checklist/S215103770')
@@ -21,7 +23,11 @@ db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=F
 #plot_order(db,mode='species')
 #plot_families(db,'Anseriformes',mode='photos')
 #plot_genuses(db,'Anatidae',mode='photos')
-plot_most_photographed(db,20)
+#plot_most_photographed(db,20)
+#plot_order_comp(db,'Pelecaniformes',mode='photos')
+plotPhyloTree(db,mode='photos',tree_style=1)
+
+
 
 
 
