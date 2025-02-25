@@ -32,8 +32,7 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
     pl.Config.set_tbl_rows(120)
     
     unique_df = unique_df.sort(by=['Order','Family','Genus','Species'])
-    print(unique_df)
-    
+
     orders = sorted(unique_df.unique(subset=["Order"], keep="first")['Order'].to_list())
     families = sorted(unique_df.unique(subset=["Family"], keep="first")['Family'].to_list())
     genera = sorted(unique_df.unique(subset=["Genus"], keep="first")['Genus'].to_list())
@@ -81,6 +80,7 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
         if not os.path.isdir(f'{os.getcwd()}/Figures'):
             os.mkdir(f'{os.getcwd()}/Figures')
             fig.write_html(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.html")
+            fig.write_image(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.png")
     
 def _getSubCategoryCount(df,category,category_list):
     subcategoryCounts = []
