@@ -4,13 +4,11 @@ Created on Tue Feb 25 11:23:55 2025
 
 @author: tlee
 """
-
-import numpy as np
+import os
 import pandas as pd
 import polars as pl
 from collections import defaultdict
 
-import holoviews as hv
 import plotly.graph_objects as go
 
 def plot_sankey_tree(db, mode: str='species',tree_style=1):
@@ -76,7 +74,9 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1):
     print(pddf)
     
     fig = _plotSankey(pddf,mode=tree_style)
-    fig.write_html(f"{db.dataFolder}/bird_taxonomy_sankey.html")
+    if not os.path.isdir(f'{db.dataFolder}/Figures'):
+        os.mkdir(f'{db.dataFolder}/Figures')
+    fig.write_html(f"{db.dataFolder}/Figures/bird_taxonomy_sankey.html")
     fig.show()
     
 def _getSubCategoryCount(df,category,category_list):
