@@ -11,7 +11,7 @@ from collections import defaultdict
 
 import plotly.graph_objects as go
 
-def plot_sankey_tree(db, mode: str='species',tree_style=1):
+def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
     df = db.df
     unique_df = df.unique(subset=["Species"], keep="first")
     unique_df = unique_df.drop('eBird_Checklist','Path','Wikipedia_URL','Scientific_Species','Capture_Date')
@@ -71,13 +71,16 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1):
                          'value': class_order_values + order_fam_values + fam_genus_values + genus_species_values})
     
     pd.set_option('display.max_rows', None)
-    print(pddf)
     
     fig = _plotSankey(pddf,mode=tree_style)
     if not os.path.isdir(f'{db.dataFolder}/Figures'):
         os.mkdir(f'{db.dataFolder}/Figures')
-    fig.write_html(f"{db.dataFolder}/Figures/bird_taxonomy_sankey.html")
-    fig.show()
+        fig.write_html(f"{db.dataFolder}/Figures/bird_taxonomy_sankey.html")
+        
+    if _debug:
+        if not os.path.isdir(f'{os.getcwd()}/Figures'):
+            os.mkdir(f'{os.getcwd()}/Figures')
+            fig.write_html(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.html")
     
 def _getSubCategoryCount(df,category,category_list):
     subcategoryCounts = []
