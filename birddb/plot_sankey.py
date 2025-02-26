@@ -69,19 +69,20 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
                          'target': orders + families + genera + species,
                          'value': class_order_values + order_fam_values + fam_genus_values + genus_species_values})
     
+    
+    pddf.to_csv('C:/Users/Blumenwitz/Downloads/example_taxo_df.csv')
     pd.set_option('display.max_rows', None)
     
     fig = _plotSankey(pddf,mode=tree_style)
     if not os.path.isdir(f'{db.dataFolder}/Figures'):
         os.mkdir(f'{db.dataFolder}/Figures')
-        fig.write_html(f"{db.dataFolder}/Figures/bird_taxonomy_sankey.html")
+    fig.write_html(f"{db.dataFolder}/Figures/bird_taxonomy_sankey.html")
         
     if _debug:
         if not os.path.isdir(f'{os.getcwd()}/Figures'):
             os.mkdir(f'{os.getcwd()}/Figures')
-            fig.write_html(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.html")
-            fig.write_image(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.png")
-    
+        fig.write_html(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.html")
+        
 def _getSubCategoryCount(df,category,category_list):
     subcategoryCounts = []
     for cat in category_list:
@@ -189,7 +190,8 @@ def _plotSankeySimple(df):
     )
     
     return fig    
-    
+
+"""
 def _plotSankeyComplex(df):
     # Get unique labels from both source and target columns
     labels = list(pd.unique(df[['source', 'target']].values.ravel('K')))
@@ -242,8 +244,169 @@ def _plotSankeyComplex(df):
         for node in nodes:
             if node in parents:
                 parent = parents[node]
-                parent_idx = parent_order.index(parent) if parent in parent_order else 0
-                node_parent_pos[node] = parent_idx
+                # Fix: ensure parent is in parent_order before trying to get its index
+                if parent in parent_order:
+                    parent_idx = parent_order.index(parent)
+                    node_parent_pos[node] = parent_idx
+                else:
+                    # If parent not found in parent_order, assign a default position
+                    node_parent_pos[node] = len(parent_order)  # Place at the end
+            else:
+                node_parent_pos[node] = 0
+        
+        # Sort nodes by their parent's position
+        return sorted(nodes, key=lambda x: node_parent_pos.get(x, 0))
+    
+    # Optimize ordering level by level
+    ordered_nodes = {}
+    ordered_nodes[0] = [root]
+    
+    for level in range(1, max_level + 1):
+        parent_level = level - 1
+        ordered_nodes[level] = optimize_level(level, ordered_nodes[parent_level])
+    
+    # Create a flat list of optimized node order
+    optimized_labels = []
+    for level in range(0, max_level + 1):
+        optimized_labels.extend(ordered_nodes[level])
+    
+    # Ensure all labels are included (there might be disconnected nodes)
+    for label in labels:
+        if label not in optimized_labels:
+            optimized_labels.append(label)
+    
+    # Remap labels to their optimized positions
+    label_map = {label: idx for idx, label in enumerate(optimized_labels)}
+    
+    # Map source and target indices based on the optimized order
+    source_indices = [label_map[src] for src in df['source']]
+    target_indices = [label_map[tgt] for tgt in df['target']]
+    
+    # Create x-coordinates based on taxonomic level
+    x_positions = {}
+    for label in optimized_labels:
+        level = taxonomic_levels.get(label, 0)
+        x_positions[label] = level * 0.2  # Scale factor for spacing
+    
+    # Create y-coordinates based on optimized positions within each level
+    y_positions = {}
+    for level in range(0, max_level + 1):
+        nodes = ordered_nodes[level]
+        total_nodes = len(nodes)
+        if total_nodes > 0:
+            for i, node in enumerate(nodes):
+                # Distribute nodes evenly within each level
+                # Add small offset to avoid potential division by zero
+                y_positions[node] = i / max(1, total_nodes - 1 + 0.001) if total_nodes > 1 else 0.5
+                
+    print(x_positions['Accipitriformes'])
+    print(x_positions['Pelecaniformes'])
+    
+    print(y_positions['Accipitriformes'])
+    print(y_positions["Cooper's hawk"])
+    print(y_positions['Suliformes'])
+    
+    # Create color scheme by level
+    color_scale = {
+        0: "rgba(31, 119, 180, 0.8)",    # Aves (blue)
+        1: "rgba(255, 127, 14, 0.8)",    # Orders (orange)
+        2: "rgba(44, 160, 44, 0.8)",     # Families (green)
+        3: "rgba(214, 39, 40, 0.8)",     # Genera (red)
+        4: "rgba(148, 103, 189, 0.8)"    # Species (purple)
+    }
+    
+    # Apply colors based on taxonomy level
+    node_colors = [color_scale[taxonomic_levels.get(label, 0)] for label in optimized_labels]
+    
+    # Create Sankey diagram with optimized positions
+    fig = go.Figure(data=[go.Sankey(
+        arrangement = "fixed",
+        node = dict(
+            pad = 15,
+            thickness = 20,
+            line = dict(color = "black", width = 0.5),
+            label = optimized_labels,
+            color = node_colors,
+            x = [x_positions.get(label, 0) for label in optimized_labels],
+            y = [y_positions.get(label, 0.5) for label in optimized_labels]
+        ),
+        link = dict(
+            source = source_indices,
+            target = target_indices,
+            value = df['value'],
+            color = [color_scale[taxonomic_levels.get(df.loc[i, 'source'], 0)] for i in df.index]
+        )
+    )])
+    
+    # Update layout
+    fig.update_layout(
+        title_text="Bird Taxonomy: From Orders to Species",
+        font=dict(size=10),
+        autosize=True,
+        height=1000,
+        width=1400,
+        margin=dict(t=60, l=25, r=25, b=25)
+    )
+    
+    return fig
+"""
+def _plotSankeyComplex(df):
+    # Get unique labels from both source and target columns
+    labels = list(pd.unique(df[['source', 'target']].values.ravel('K')))
+    
+    # Create a graph representation and identify levels
+    graph = {}
+    parents = {}
+    children = defaultdict(list)
+    
+    for i, row in df.iterrows():
+        source, target = row['source'], row['target']
+        if source not in graph:
+            graph[source] = []
+        if target not in graph:
+            graph[target] = []
+        graph[source].append(target)
+        parents[target] = source
+        children[source].append(target)
+    
+    # Identify root (Aves) and build taxonomic levels
+    root = 'Aves'  # Assuming 'Aves' is always the root
+    
+    # Traverse the tree to determine levels
+    taxonomic_levels = {root: 0}
+    level_nodes = defaultdict(list)
+    level_nodes[0].append(root)
+    
+    queue = [root]
+    while queue:
+        node = queue.pop(0)
+        current_level = taxonomic_levels[node]
+        
+        for child in graph.get(node, []):
+            if child not in taxonomic_levels:
+                taxonomic_levels[child] = current_level + 1
+                level_nodes[current_level + 1].append(child)
+                queue.append(child)
+    
+    # Get the maximum level
+    max_level = max(taxonomic_levels.values())
+    
+    # Create optimized node ordering to minimize crossings
+    def optimize_level(level, parent_order):
+        nodes = level_nodes[level]
+        if not nodes or level == 0:  # Skip for root level
+            return nodes
+        
+        # Create a mapping of nodes to their parent's position
+        node_parent_pos = {}
+        for node in nodes:
+            if node in parents:
+                parent = parents[node]
+                if parent in parent_order:
+                    parent_idx = parent_order.index(parent)
+                    node_parent_pos[node] = parent_idx
+                else:
+                    node_parent_pos[node] = 0
             else:
                 node_parent_pos[node] = 0
         
@@ -284,9 +447,21 @@ def _plotSankeyComplex(df):
     y_positions = {}
     for level in range(0, max_level + 1):
         nodes = ordered_nodes[level]
-        for i, node in enumerate(nodes):
-            # Distribute nodes evenly within each level
-            y_positions[node] = i / (len(nodes) + 1)
+        total_nodes = len(nodes)
+        
+        if total_nodes > 1:
+            # Define buffer to avoid exact 0 and 1 positions
+            buffer = 0.05  # 5% buffer on top and bottom
+            usable_range = 1.0 - (2 * buffer)  # Usable range for positioning
+            
+            for i, node in enumerate(nodes):
+                # Distribute nodes evenly with buffer on top and bottom
+                normalized_position = i / (total_nodes - 1) if total_nodes > 1 else 0.5
+                y_positions[node] = buffer + (normalized_position * usable_range)
+        else:
+            # If only one node at this level, place it in the middle
+            for node in nodes:
+                y_positions[node] = 0.5
     
     # Make sure all labels have y positions (fallback for any missing)
     for label in optimized_labels:
