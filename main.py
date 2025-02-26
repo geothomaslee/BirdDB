@@ -25,7 +25,7 @@ db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=F
 #plot_genuses(db,'Anatidae',mode='photos')
 #plot_most_photographed(db,20)
 #plot_order_comp(db,'Pelecaniformes',mode='photos')
-plotPhyloTree(db,mode='photos',tree_style=1)
+plotPhyloTree(db,mode='species',tree_style=2)
 
 
 
