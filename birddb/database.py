@@ -27,6 +27,7 @@ class BirdDataBase:
                                    'Scientific_Species': str,
                                    'Capture_Date': str,
                                    'Path': str,
+                                   'Basename': str,
                                    'Wikipedia_URL': str,
                                    'eBird_Checklist': str})
 
@@ -162,7 +163,7 @@ class BirdDataBase:
         self.unsortedList = []
         self.save()
 
-    def _add_row_to_df(self, order, fam, genus, spec, sci_spec, cap, path, url, ebird):
+    def _add_row_to_df(self, order, fam, genus, spec, sci_spec, cap, path, basename, url, ebird):
         """Adds a row to the internal DataFrame"""
         new_df = pl.DataFrame({'Order':order,
                                'Family':fam,

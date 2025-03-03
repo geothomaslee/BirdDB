@@ -25,7 +25,8 @@ def plot_orders(db,mode: str='species'):
         df = df.unique(subset=["Species"], keep="first")
         
     orders = set(df['Order'].to_list())
-    orders.remove(None)
+    if None in orders:
+        orders.remove(None)
     orders = sorted(list(orders))
     counts = []
     for order in orders:
