@@ -305,9 +305,9 @@ class BirdDataBase:
     def save(self):
         """Pickles the bird data base to the data home directory"""
         savepath = f'{self.dataFolder}/BirdDataBase.pkl'
-        print(savepath)
         with open(savepath, 'wb') as f:
             pickle.dump(self,f)
+        return savepath
 
     def get_stats(self):
         """Calculates a bunch of stats for the database"""
