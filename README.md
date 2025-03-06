@@ -1,5 +1,7 @@
 # BirdDB: A Data Base Manager for Bird Photography
 
+![Ring-necked duck](./Figures/RingNeckedDuck2_Feb23_2025.png)
+
 Are you someone who enjoys photography of birds? Are you looking for a system to organize the vast number of photos you've collected over your birding career? BirdDB may be for you!
 
 ### Installation
