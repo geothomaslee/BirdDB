@@ -7,6 +7,6 @@
 - [x] Add ability to make copies of all queried photos and put them in an easy to access directory
 - [x] Add ability to easily clear query directories
 - [ ] Add plotting tools for showing evolution of photography over time
-  - [] Species seen per month
-  - [] Species photographed per month
-  - [] Long-term evolution of photographed taxa
+  - [ ] Species seen per month
+  - [ ] Species photographed per month
+  - [ ] Long-term evolution of photographed taxa
