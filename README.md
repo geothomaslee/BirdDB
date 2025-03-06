@@ -32,7 +32,7 @@ Example: `ForstersTern_Mar1_2025` or `AmericanWhiteIbis_SnowyEgret_NeotropicCorm
   - [ ] Charadriformes
     - [ ] Laridae
       - [ ] Sterna
-        - [ ] {dataDirectory}/Charadriformes/Laridae/Sterna/ForsternsTern_Mar1_2025
+        - [ ] {dataDirectory}/Charadriformes/Laridae/Sterna/ForstersTern_Mar1_2025
 
 #### The DataFrame
 | Order | Family | Genus | Species | Scientific_Species | Capture_Date | Path | Wikipedia_URL | eBird_Checklist |
