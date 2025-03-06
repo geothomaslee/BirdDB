@@ -8,14 +8,12 @@ from birddb.database import getBirdDataBase
 import polars as pl
 
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
-db.sort_new('https://ebird.org/checklist/S216728975')
+#db.sort_new('https://ebird.org/checklist/S216728975')
 
 
-
-
-
-qu = db.search('Tufted titmouse')
-qu.show_images()
+qu = db.search('Anhinga')
+qu.deposit(photo_limit=50)
+qu.clear()
 
 
 
@@ -24,7 +22,6 @@ qu.show_images()
 #db.sort_new('https://ebird.org/checklist/S216056879')
 
 #=====================Bird DB planned features list============================
-# Fix bug with genus
 # Photography taken over time
 #   Stacked bar chart of orders would be cool
 # Ability to actually display photos
