@@ -12,7 +12,8 @@ BirdDataBase objects can be saved to the disk, and each entry new entry can take
 
 #### The DataFrame
 | Order | Family | Genus | Species | Scientific_Species | Capture_Date | Path | Wikipedia_URL | eBird_Checklist |
-|-------|--------|-------|---------|--|--|--|--|--|
+|--|--|--|--|--|--|--|--|--|
+| Charadriformes | Laridae | Sterna | Forster's tern | S. forsteri | March 1 2025 | /path/to/saved/.png | https://en.wikipedia.org/wiki/Forster's_tern | https://ebird.org/checklist/S216014746 |
 
 
 
