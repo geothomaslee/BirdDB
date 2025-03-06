@@ -6,9 +6,14 @@ Are you someone who enjoys photography of birds? Are you looking for a system to
 All required modules are available on `conda-forge`, so it is recommended you use Conda or Mamba for installation.
 
 ## BirdDataBase
-The core module of BirdDB is `birddb.database` which contains the class `BirdDatabase`. BirdDataBase stores information about your photography in a Polars (because I don't like Pandas) DataFrame and wraps it with user-friendly methods for managing the data within that DataFrame. 
+The core module of BirdDB is `birddb.database` which contains the class `BirdDatabase`. BirdDataBase stores information about your photography in a Polars DataFrame and wraps it with user-friendly methods for accessing the data. 
 
 BirdDataBase objects can be saved to the disk, and each entry new entry can take a second or two to add properly, so it is recommended to use `birddb.getBirdDataBase` when looking at your database. This will look for a saved database and load it in before initializing a new one.
+
+#### The DataFrame
+| Order | Family | Genus | Species | Scientific_Species | Capture_Date | Path | Wikipedia_URL | eBird_Checklist |
+|-------|--------|-------|---------|--|--|--|--|--|
+
 
 
 ### Planned Features
