@@ -10,10 +10,12 @@ import polars as pl
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
 #db.sort_new('https://ebird.org/checklist/S216728975')
 
+pl.Config.set_tbl_rows(200)
+print(db.df)
 
-qu = db.search('Anhinga')
-qu.deposit(photo_limit=50)
-qu.clear()
+#qu = db.search('Anhinga')
+#qu.deposit(photo_limit=50)
+#qu.clear()
 
 
 
