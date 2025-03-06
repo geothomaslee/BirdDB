@@ -19,7 +19,23 @@ import wikipedia
 from wikipedia import WikipediaPage, WikipediaException
 
 class BirdDataBase:
+    """
+    A class for managing bird photography, with a Polars DataFrame as the
+    core unit, but with many methods for querying that DataFrame for ease of use.
+    """
     def __init__(self,datafolder: str=None):
+        """
+        Parameters
+        ----------
+        datafolder : str, optional
+            Path to the main data directory for initializing the database. If none
+            is given, the path is assumed to be here. The default is None.
+
+        Returns
+        -------
+        None.
+
+        """
         self.df = pl.DataFrame(schema={'Order': str,
                                    'Family': str,
                                    'Genus': str,
@@ -30,20 +46,44 @@ class BirdDataBase:
                                    'Basename': str,
                                    'Wikipedia_URL': str,
                                    'eBird_Checklist': str})
-
-        self.dataFolder =  datafolder
+        if self.dataFolder is None:
+            self.dataFolder = os.getcwd()
+        else:
+            self.dataFolder =  datafolder
         if _has_existing_inventory(datafolder):
             print('Adding existing classification to directory...')
             self.load_data_base()
 
         self.unsortedList = []
+        self.diskSpace=0
 
-        self.photoCount = len(self.df)-1
-        self.DiskSpace=0
+        self.photoCount = 0
+        self.orderCount = 0
+        self.familyCount = 0
+        self.genusCount = 0
+        self.speciesCount = 0
+        self.highCountDict = {}
+        self.get_stats()
+
         self.save()
 
     def __repr__(self):
         return f'Bird Data Base containing {self.photoCount} photos at {self.dataFolder}'
+
+    def __str__(self):
+        self.get_stats()
+        return (
+            '=================================================================\n'
+            f'Bird Data Base containing {self.photoCount} photos at {self.dataFolder}\n'
+            f'Birding: {self.checklistCount} eBird Checklists on {self.dateCount} different dates\n'
+            f'Taxonomy: {self.speciesCount} Species, {self.genusCount} Genera, {self.familyCount} Families, {self.orderCount} Orders\n'
+            f"Most Viewed "
+            f"| Order: {self.highCountDict['Order'][0]} ({self.highCountDict['Order'][1]}) "
+            f"| Family: {self.highCountDict['Family'][0]} ({self.highCountDict['Family'][1]}) "
+            f"| Genus: {self.highCountDict['Genus'][0]} ({self.highCountDict['Genus'][1]}) "
+            f"| Species: {self.highCountDict['Species'][0]} ({self.highCountDict['Species'][1]})\n"
+            '================================================================='
+        )
 
     def load_data_base(self):
         """
@@ -76,7 +116,14 @@ class BirdDataBase:
                 self.df = self._add_row_to_df(order, fam, genus, common_name,
                                          sci_species,cap,png,page.url,ebird=None)
 
-    def add_unsorted_to_database(self, ebird: str=None):
+        self.get_stats()
+
+    def sort_new(self,ebird: str=None):
+        self._add_unsorted_to_database(ebird=ebird)
+        self.sort()
+        self.save()
+
+    def _add_unsorted_to_database(self, ebird: str=None):
         """
         Looks for pngs in the home directory that haven't been sorted and adds
         them to the database.
@@ -96,10 +143,11 @@ class BirdDataBase:
         pngs = glob(f'{self.dataFolder}/*.png')
         self.unsortedList = pngs
         for png in tqdm(pngs):
-            self.add_new_png_to_database(png,ebird)
+            self._add_new_png_to_database(png,ebird)
+        self.get_stats()
         self.save()
 
-    def add_new_png_to_database(self, png: str, ebird: str=None):
+    def _add_new_png_to_database(self, png: str, ebird: str=None):
         """
         Adds a new png photo to the database.
 
@@ -127,6 +175,7 @@ class BirdDataBase:
 
             self.df = self._add_row_to_df(order, fam, genus, common_name,
                                      sci_species,cap,png,page.url, ebird)
+        self.get_stats()
 
     def rename_species(self, orig, new):
         """
@@ -163,7 +212,7 @@ class BirdDataBase:
         self.unsortedList = []
         self.save()
 
-    def _add_row_to_df(self, order, fam, genus, spec, sci_spec, cap, path, basename, url, ebird):
+    def _add_row_to_df(self, order, fam, genus, spec, sci_spec, cap, path, url, ebird):
         """Adds a row to the internal DataFrame"""
         new_df = pl.DataFrame({'Order':order,
                                'Family':fam,
@@ -221,14 +270,12 @@ class BirdDataBase:
                     .otherwise(pl.col("Path"))
                     .alias("Path")
                 )
-            
-            """
+
             try:
                 os.remove(png)
             except PermissionError:
-                pass
-            """
-
+                print(f'Warning: {png} could not be removed from unsorted directory. Make sure to delete it manually ' +
+                      'to avoid entering it into the database multiple times')
 
     def _add_unidentified(self,ebird: str):
         """
@@ -261,6 +308,46 @@ class BirdDataBase:
         print(savepath)
         with open(savepath, 'wb') as f:
             pickle.dump(self,f)
+
+    def get_stats(self):
+        """Calculates a bunch of stats for the database"""
+        self.photoCount = self.df.height
+        self.orderCount = self.df.unique(subset=["Order"], keep="first").height
+        self.familyCount = self.df.unique(subset=["Family"], keep="first").height
+        self.genusCount = self.df.unique(subset=["Genus"], keep="first").height
+        self.speciesCount = self.df.unique(subset=["Species"], keep="first").height
+        self.checklistCount = self.df.unique(subset=["eBird_Checklist"], keep="first").height
+        self.dateCount = self.df.unique(subset=["Capture_Date"], keep="first").height
+        self.highCountDict = {'Order': [self.df.select([pl.col("Order").mode().alias("mode")])['mode'].to_list()[0],None],
+                         'Species': [self.df.select([pl.col("Species").mode().alias("mode")])['mode'].to_list()[0],None],
+                         'Family': [self.df.select([pl.col("Family").mode().alias("mode")])['mode'].to_list()[0],None],
+                         'Genus': [self.df.select([pl.col("Genus").mode().alias("mode")])['mode'].to_list()[0],None]}
+        self.highCountDict['Order'][1] = self.df.filter(pl.col('Order')==self.highCountDict['Order'][0]).height
+        self.highCountDict['Family'][1] = self.df.filter(pl.col('Family')==self.highCountDict['Family'][0]).height
+        self.highCountDict['Genus'][1] = self.df.filter(pl.col('Genus')==self.highCountDict['Genus'][0]).height
+        self.highCountDict['Species'][1] = self.df.filter(pl.col('Species')==self.highCountDict['Species'][0]).height
+
+        return self.highCountDict
+
+    def plot(self,plot_type: str='order',**kwargs):
+        import birddb.plotting as bplt
+        plot_functions={
+            'orders' : bplt.plot_orders,
+            'families' : bplt.plot_families,
+            'genera' : bplt.plot_genera,
+            'tree' : bplt.plot_phylo_tree,
+            'order breakdown' : bplt.plot_order_comp,
+            'photos' : bplt.plot_most_photographed,
+            }
+        if plot_type not in plot_functions:
+            valid_types = ', '.join(plot_functions.keys())
+            raise ValueError(f"Invalid plot type '{plot_type}'. Valid types are: {valid_types}")
+        return plot_functions[plot_type](self, **kwargs)
+
+    def search(self,search,flexible=True):
+        from birddb.query import Query
+        return Query(self,search,flexible=True)
+
 
 def getBirdDataBase(directory: str=None,force_overwrite: bool=False):
     """
@@ -331,7 +418,10 @@ def _strip_species_name(spec: str) -> str:
             species.append(spec[0:-1])
         except ValueError:
             species.append(spec)
-        
+        except IndexError as e:
+            raise ValueError("Could not parse species name. Did you perhaps throw"
+                             "an unexpected '_' at the back of your final name?") from e
+
     return species
 
 def _pull_species_wiki_page(spec) -> WikipediaPage:
@@ -372,7 +462,14 @@ def _pull_species_box(page: WikipediaPage):
     genus = _pull_table_value(tds,'Genus')
     species = _pull_table_value_tr(trs,'Species')
 
+    genus = _checkForRepeatGenus(genus)
+
     return [order, fam, genus, species]
+
+def _checkForRepeatGenus(genus):
+    if genus in ['Anhinga']:
+        return f'{genus} (g)'
+    return genus
 
 def _pull_table_value(tds, value: str) -> str:
     """Pulls a specific value from an HTML table"""
@@ -428,10 +525,10 @@ def _pull_capture_date(png):
         match = re.search(pattern,os.path.basename(png))[0]
     except TypeError as e:
         if str(e) == ("'NoneType' object is not subscriptable"):
-            raise ValueError(f'Could not pull capture date for {png}. Make sure date is properly formatted')
-        else:
-            raise e
-        
+            raise ValueError(f'Could not pull capture date for {png}. Make sure date is properly formatted') from e
+
+        raise e
+
     if match:
         date = f'{match[0:3]} {match[3:]}'
         date = date.replace('_',' ')
@@ -454,7 +551,7 @@ def _get_full_month_name(date):
              'Nov': 'November',
              'Dec': 'December'}
 
-    for key in ddict.keys():
+    for key in ddict:
         if key in date:
             date = date.replace(key,ddict[key])
             return date
