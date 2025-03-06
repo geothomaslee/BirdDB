@@ -13,8 +13,8 @@ db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=F
 pl.Config.set_tbl_rows(200)
 print(db.df)
 
-#qu = db.search('Anhinga')
-#qu.deposit(photo_limit=50)
+qu = db.search('White-faced ibis')
+qu.deposit(photo_limit=10)
 #qu.clear()
 
 
