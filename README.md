@@ -52,3 +52,5 @@ Example: `ForstersTern_Mar1_2025` or `AmericanWhiteIbis_SnowyEgret_NeotropicCorm
   - [ ] Species seen per month
   - [ ] Species photographed per month
   - [ ] Long-term evolution of photographed taxa
+  
+![Black-necked stilts](./Figures/BlackNeckedStilts_Jan20_2025.png)
