@@ -6,6 +6,7 @@ Created on Wed Mar  5 17:58:36 2025
 """
 import shutil
 import os
+import re
 from datetime import datetime
 from glob import glob
 
@@ -23,13 +24,44 @@ class Query():
     def __init__(self, db: BirdDataBase, search,flexible: bool=False):
         self.db = db
         if isinstance(search,str):
-            self._search_str(db.df, search)
+            self.df = self._search_str(db, search)
+        if isinstance(search, list):
+            self.df = self._search_list(db, search)
+        if isinstance(search, dict):
+            self.df = self._search_dict(db, search)
 
     def __str__(self):
         return str(self.df)
 
-    def _search_str(self,df, search):
-        self.df = df.filter(pl.any_horizontal(pl.all().eq(search)))
+    def _search_str(self, db, search,cols=None):
+        df = db.df
+        if cols is None:
+            cols = df.columns
+        clean_search = search.replace('-', '').replace(' ', '').lower()
+        exprs = [pl.col(col).str.replace_all(r"[-\s]", "").str.to_lowercase().str.contains(clean_search) for col in cols]
+        return df.filter(pl.any_horizontal(exprs))
+
+    def _search_list(self,db,search):
+        for i, _src in enumerate(search):
+            if not isinstance(_src, str):
+                raise TypeError('If query is given a list, items in list must be strings')
+            if i == 0:
+                df = self._search_str(db,_src)
+                continue
+            df = pl.concat([df,self._search_str(db,_src)],how='vertical')
+        return df
+
+    def _search_dict(self,db,search):
+        for key in search:
+            if key not in db.df.columns:
+                raise ValueError(f'Could not find column {key}')
+
+        for i, (k, v) in enumerate(search.items()):
+            if i == 0:
+                df = self._search_str(db,v,cols=[k])
+                continue
+            df = pl.concat([df,self._search_str(db,v,cols=[k])],how='vertical')
+        return df
 
     def show_images(self,photo_limit=10):
         imgs =self.df['Path'].to_list()
