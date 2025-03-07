@@ -216,7 +216,7 @@ def plot_order_comp(db,order,mode: str='species',return_axes: bool=False):
 
     # Create color scheme
     # Get maximum number of genera in any family for color mapping
-    max_genera = max(len(genera) for genera in all_gen_names)
+    #max_genera = max(len(genera) for genera in all_gen_names)
 
     # Create color palette for outer ring (families)
     tab20c = plt.colormaps['tab20c']
@@ -362,6 +362,101 @@ def returnModeSubtitle(mode: str):
         return 'Photos Taken, Unique Trips'
     else:
         raise ValueError('Mode must be "species","photos", "dates", or "trips"')
+
+def plot_photos_over_time(db,mode: str='photos'):
+    """
+    Plots the number of photos taken over time.
+
+    Parameters
+    ----------
+    db : birddb.database.BirdDataBase
+        BirdDataBase.
+    mode : str, optional
+        photos: counts every photo for every species
+        dates: counts the first photo of a species on a given data. I.E. if you photographed a species
+            twice on the same day, would only count as 1.
+        trips: counts the first photo of a species for a given eBird list. I.E. if you photographed
+            a species multiple times within the same eBird list, would only count as 1. In many cases
+            will not be that different from dates, but will differ in the case of a species seen multiple
+            times on the same date, but on different eBird checklists
+        The default is 'species'.
+
+    """
+    df = returnModeDF(db.df,mode)
+    df = df.with_columns(pl.col("Capture_Date").str.strptime(pl.Datetime, format="%B %e %Y"))
+    dates = sorted(list(set(df['Capture_Date'].to_list())))
+    counts = []
+    for i, date in enumerate(dates):
+        if i == 0:
+            counts.append(df.filter(pl.col('Capture_Date')==date).height)
+            continue
+        counts.append(df.filter(pl.col('Capture_Date')==date).height + counts[i-1])
+    fig, ax = plt.subplots()
+    ax.plot(dates,counts,'b-')
+    ax.set_title(f'Sightings Over Time\n{returnModeSubtitle(mode)}')
+    plt.xticks(rotation=55,
+               ha='right' if 55 < 90 else 'center')
+    plt.show()
+
+def plot_orders_over_time(db,mode: str='photos'):
+    """
+    Plots the number of photos taken over time.
+
+    Parameters
+    ----------
+    db : birddb.database.BirdDataBase
+        BirdDataBase.
+    mode : str, optional
+        photos: counts every photo for every species
+        dates: counts the first photo of a species on a given data. I.E. if you photographed a species
+            twice on the same day, would only count as 1.
+        trips: counts the first photo of a species for a given eBird list. I.E. if you photographed
+            a species multiple times within the same eBird list, would only count as 1. In many cases
+            will not be that different from dates, but will differ in the case of a species seen multiple
+            times on the same date, but on different eBird checklists
+        The default is 'species'.
+
+    """
+    df = returnModeDF(db.df,mode)
+    df = df.with_columns(pl.col("Capture_Date").str.strptime(pl.Datetime, format="%B %e %Y"))
+    dates = sorted(list(set(df['Capture_Date'].to_list())))
+    orders = list(set(db.df['Order'].to_list()))
+
+    order_count_dict = {}
+    for order in orders:
+        order_count_dict[order] = []
+        for i, date in enumerate(dates):
+            if i == 0:
+                order_count_dict[order].append(df.filter(pl.col('Capture_Date')==date,
+                                                         pl.col('Order')==order).height)
+                continue
+            order_count_dict[order].append(df.filter(pl.col('Capture_Date')==date,
+                                                     pl.col('Order')==order).height + order_count_dict[order][i-1])
+
+    order_count_dict = dict(sorted(order_count_dict.items(), key=lambda x: x[1][-1], reverse=True))
+
+    fig, ax = plt.subplots()
+
+    all_counts = []
+    labels = []
+    for k, v in order_count_dict.items():
+        all_counts.append(v)
+        labels.append(k)
+
+    for i, count in enumerate(all_counts):
+        if i == 0:
+            ax.bar(dates,count,label=labels[i])
+        else:
+            new_count = [0 for x in count]
+            for j in range(i):
+                new_count = [sum(x) for x in zip(new_count, all_counts[j])]
+            ax.bar(dates,count,bottom=new_count,label=labels[i])
+    ax.legend(fontsize='x-small')
+    ax.set_title(f'Orders Seen Over Time\n{returnModeSubtitle(mode)}')
+    plt.xticks(rotation=55,
+               ha='right' if 55 < 90 else 'center')
+
+    plt.show()
 
 
 
