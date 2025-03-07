@@ -10,14 +10,8 @@ import polars as pl
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
 #db.sort_new('https://ebird.org/checklist/S216728975')
 
-pl.Config.set_tbl_rows(200)
-print(db.df)
-
-qu = db.search('White-faced ibis')
-qu.deposit(photo_limit=10)
-#qu.clear()
-
-
+from birddb.plotting import plot_orders_over_time
+plot_orders_over_time(db)
 
 
 
@@ -26,11 +20,6 @@ qu.deposit(photo_limit=10)
 #=====================Bird DB planned features list============================
 # Photography taken over time
 #   Stacked bar chart of orders would be cool
-# Ability to actually display photos
-# Query functions so you can search for species without having to known how DataFrames work
-#   Strings as single queries
-#   Dictionary where key=column and value=value, and return all matching values?
-#   Ability to display photos that are queried, or move them to a directory for better viewing ability
 # Get much clearer list of actually required libraries
 
 
