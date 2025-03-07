@@ -337,7 +337,8 @@ class BirdDataBase:
             'genera' : bplt.plot_genera,
             'tree' : bplt.plot_phylo_tree,
             'order breakdown' : bplt.plot_order_comp,
-            'photos' : bplt.plot_most_photographed,
+            'most photographed' : bplt.plot_most_photographed,
+            'photos over time' : bplt.plot_photos_over_time
             }
         if plot_type not in plot_functions:
             valid_types = ', '.join(plot_functions.keys())
