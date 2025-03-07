@@ -7,3 +7,6 @@ birddb/__pycache__/plotting.cpython-312.pyc
 birddb/__pycache__/plotting.cpython-312.pyc
 *.pyc
 *.pyc
+birddb/__pycache__/database.cpython-312.pyc
+birddb/__pycache__/plotting.cpython-312.pyc
+birddb/__pycache__/query.cpython-312.pyc
