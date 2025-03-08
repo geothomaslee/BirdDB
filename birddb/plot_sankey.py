@@ -13,7 +13,28 @@ from collections import defaultdict
 import plotly.graph_objects as go
 from birddb.sorting import get_photo_count
 
-def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
+def plot_sankey_tree(db, mode: str='species',_debug: bool=True):
+    """
+    Main function for plotting a taxonomic tree using a Sankey diagram as a
+    framework, for ability to show branch widths depending on the mode parameter.
+
+    Parameters
+    ----------
+    db : birddb.database.BirdDataBase
+        The core BirdDataBase object of BirdDB.
+    mode : str, optional
+        photos: counts every photo for every species
+        dates: counts the first photo of a species on a given data. I.E. if you photographed a species
+            twice on the same day, would only count as 1.
+        trips: counts the first photo of a species for a given eBird list. I.E. if you photographed
+            a species multiple times within the same eBird list, would only count as 1. In many cases
+            will not be that different from dates, but will differ in the case of a species seen multiple
+            times on the same date, but on different eBird checklists
+        The default is 'species'.
+    _debug : bool, optional
+        If True, will return extra debugging info. The default is True.
+
+    """
     df = db.df
     unique_df = get_photo_count(df)
     unique_df = unique_df.drop('eBird_Checklist','Path','Wikipedia_URL','Scientific_Species','Capture_Date')
@@ -79,23 +100,45 @@ def plot_sankey_tree(db, mode: str='species',tree_style=1,_debug: bool=True):
             os.mkdir(f'{os.getcwd()}/Figures')
         fig.write_html(f"{os.getcwd()}/Figures/bird_taxonomy_sankey.html")
 
-def _getSubCategoryCount(df,category,category_list):
+def _getSubCategoryCount(df: DataFrame,category: str,category_list: list):
+    """Returns the number of subcategories within a larger category"""
     subcategoryCounts = []
     for cat in category_list:
         subcategoryCounts.append(df.filter(pl.col(category)==cat).height)
 
     return subcategoryCounts
 
-def plotSankey(df, full_df, node_spacing: float=0.015):
+def plotSankey(pddf: DataFrame, full_df: DataFrame, node_spacing: float=0.015):
+    """
+    Function for plotting the Sankey diagram using Plotly's graph object module
+    and DataFrames created and formatted by plot_sankey_tree.
+
+    Parameters
+    ----------
+    pddf : DataFrame
+        The Pandas DataFrame created by plot_sankey_tree. This should have the
+        columns 'source','target', and 'value'. Each row is the source node,
+        the target node, and the size of the tree between them.
+    full_df : DataFrame
+        The full, original Polars DataFrame inherited from the BirdDataBase.
+    node_spacing : float, optional
+        The spacing between nodes. The default is 0.015.
+
+    Returns
+    -------
+    plotly.graph_object.Figure
+        PLotly graph object figure containing the Sankey diagram.
+
+    """
     # Get unique labels from both source and target columns
-    labels = list(pd.unique(df[['source', 'target']].values.ravel('K')))
+    labels = list(pd.unique(pddf[['source', 'target']].values.ravel('K')))
 
     # Create a graph representation and identify levels
     graph = {}
     parents = {}
     children = defaultdict(list)
 
-    for i, row in df.iterrows():
+    for i, row in pddf.iterrows():
         source, target = row['source'], row['target']
         if source not in graph:
             graph[source] = []
@@ -127,8 +170,8 @@ def plotSankey(df, full_df, node_spacing: float=0.015):
     # Get the maximum level
     max_level = max(taxonomic_levels.values())
 
-    # Create optimized node ordering to minimize crossings
     def optimize_level(level, parent_order):
+        """Optimizes node ordering to get rid of crossing branches"""
         nodes = level_nodes[level]
         if not nodes or level == 0:  # Skip for root level
             return nodes
@@ -171,8 +214,8 @@ def plotSankey(df, full_df, node_spacing: float=0.015):
     label_map = {label: idx for idx, label in enumerate(optimized_labels)}
 
     # Map source and target indices based on the optimized order
-    source_indices = [label_map[src] for src in df['source']]
-    target_indices = [label_map[tgt] for tgt in df['target']]
+    source_indices = [label_map[src] for src in pddf['source']]
+    target_indices = [label_map[tgt] for tgt in pddf['target']]
 
     # Create x-coordinates based on taxonomic level
     x_positions = {}
@@ -183,8 +226,8 @@ def plotSankey(df, full_df, node_spacing: float=0.015):
     node_values = {}
     for label in labels:
         # Calculate node value as max of incoming or outgoing links
-        incoming_sum = df[df['target'] == label]['value'].sum()
-        outgoing_sum = df[df['source'] == label]['value'].sum()
+        incoming_sum = pddf[pddf['target'] == label]['value'].sum()
+        outgoing_sum = pddf[pddf['source'] == label]['value'].sum()
         node_values[label] = max(incoming_sum, outgoing_sum)
 
     # Create y-coordinates based on level-specific spreading factor
@@ -281,8 +324,8 @@ def plotSankey(df, full_df, node_spacing: float=0.015):
         link = dict(
             source = source_indices,
             target = target_indices,
-            value = df['value'],
-            color = [color_scale[taxonomic_levels.get(df.loc[i, 'source'], 0)] for i in df.index]
+            value = pddf['value'],
+            color = [color_scale[taxonomic_levels.get(pddf.loc[i, 'source'], 0)] for i in pddf.index]
         )
     )])
 
