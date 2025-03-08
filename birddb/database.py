@@ -338,7 +338,8 @@ class BirdDataBase:
             'tree' : bplt.plot_phylo_tree,
             'order breakdown' : bplt.plot_order_comp,
             'most photographed' : bplt.plot_most_photographed,
-            'photos over time' : bplt.plot_photos_over_time
+            'photos over time' : bplt.plot_photos_over_time,
+            'orders over time': bplt.plot_orders_over_time,
             }
         if plot_type not in plot_functions:
             valid_types = ', '.join(plot_functions.keys())
@@ -349,6 +350,11 @@ class BirdDataBase:
         from birddb.query import Query
         return Query(self,search,flexible=True)
 
+    def to_csv(self,file: str=None):
+        if file == None:
+            self.df.write_csv(f'{self.dataFolder}/BirdDataBase.csv')
+        else:
+            self.df.write_csv(file)
 
 def getBirdDataBase(directory: str=None,force_overwrite: bool=False):
     """
