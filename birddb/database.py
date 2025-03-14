@@ -410,6 +410,7 @@ def _path_to_list(path: str) -> list:
 
 def _strip_species_name(spec: str) -> str:
     """Strips a list of species names as strings from the png"""
+    error_spec = spec
     if '_Downscale' in spec:
         spec = spec.replace('_Downscale', '')
 
@@ -426,7 +427,7 @@ def _strip_species_name(spec: str) -> str:
         except ValueError:
             species.append(spec)
         except IndexError as e:
-            raise ValueError("Could not parse species name. Did you perhaps throw"
+            raise ValueError(f"Could not parse species name {error_spec}. Did you perhaps throw"
                              "an unexpected '_' at the back of your final name?") from e
 
     return species
