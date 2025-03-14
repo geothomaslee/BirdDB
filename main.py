@@ -8,7 +8,9 @@ from birddb.database import getBirdDataBase
 import polars as pl
 
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
-#db.sort_new('https://ebird.org/checklist/S216728975')
+#db.sort_new('https://ebird.org/checklist/S217516145')
+
+db.plot(plot_type='tree')
 
 #=====================Bird DB planned features list============================
 # Get much clearer list of actually required libraries
