@@ -161,8 +161,8 @@ def plot_genera(db, family, mode: str='species',return_axes: bool=False):
     if return_axes:
         return fig, ax
 
-def plot_phylo_tree(db,mode:str = 'Species',tree_style=1):
-    plot_sankey_tree(db,mode=mode,tree_style=tree_style)
+def plot_phylo_tree(db,mode:str = 'Species'):
+    plot_sankey_tree(db,mode=mode)
 
 def plot_order_comp(db,order,mode: str='species',return_axes: bool=False):
     """
