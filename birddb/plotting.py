@@ -379,7 +379,7 @@ def plot_photos_over_time(db,mode: str='photos'):
             a species multiple times within the same eBird list, would only count as 1. In many cases
             will not be that different from dates, but will differ in the case of a species seen multiple
             times on the same date, but on different eBird checklists
-        The default is 'species'.
+        The default is 'photos'.
 
     """
     df = returnModeDF(db.df,mode)
