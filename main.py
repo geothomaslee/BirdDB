@@ -8,9 +8,13 @@ from birddb.database import getBirdDataBase
 import polars as pl
 
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
-#db.sort_new('https://ebird.org/checklist/S217516145')
+db.sort_new('https://ebird.org/checklist/S235566653')
 
-db.plot(plot_type='tree')
+#qu.search('Purple gallinule')
+#print(qu.df)
+#qu.deposit(60)
+
+#db.plot(plot_type='photos over time',mode='species')
 
 #=====================Bird DB planned features list============================
 # Get much clearer list of actually required libraries
