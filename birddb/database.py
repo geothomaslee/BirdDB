@@ -356,6 +356,15 @@ class BirdDataBase:
         else:
             self.df.write_csv(file)
 
+    def clear_errors(self, date):
+        """Clears rows with None values, good for bad Wikipedia page pulls"""
+        df = self.df
+        no_nulls_filter = pl.all_horizontal(~pl.all().is_null())
+        filtered_df = df.filter(no_nulls_filter)
+
+        return filtered_df
+
+
 def getBirdDataBase(directory: str=None,force_overwrite: bool=False):
     """
     Wrapper function for creating new bird databases. If a pickled BirdDataBase
@@ -430,6 +439,10 @@ def _strip_species_name(spec: str) -> str:
             raise ValueError(f"Could not parse species name {error_spec}. Did you perhaps throw"
                              "an unexpected '_' at the back of your final name?") from e
 
+    for i, spec in range(len(species)):
+        if spec == 'PurpleGallinule':
+            species[i] = 'AmericanPurpleGallinule'
+
     return species
 
 def _pull_species_wiki_page(spec) -> WikipediaPage:
@@ -468,7 +481,7 @@ def _pull_species_box(page: WikipediaPage):
     order = _pull_table_value(tds,'Order')
     fam = _pull_table_value(tds,'Family')
     genus = _pull_table_value(tds,'Genus')
-    species = _pull_table_value_tr(trs,'Species')
+    species = _pull_table_value_tr(trs,'Species',page=page)
 
     genus = _checkForRepeatGenus(genus)
 
@@ -514,13 +527,17 @@ def _extract_bird_name(html_str):
         return match
     return None
 
-def _pull_table_value_tr(trs, value: str) -> str:
+def _pull_table_value_tr(trs, value: str, page: WikipediaPage) -> str:
     """Pulls a specific value from a <tr> class in HTML"""
     for tr in trs:
         tr_str = str(tr)
         if value in tr_str:
-            match = re.findall('<b>(.*?)</b>', tr_str)[0]
-            match = match.replace('\xa0', ' ')
+            try:
+                match = re.findall('<b>(.*?)</b>', tr_str)[0]
+                match = match.replace('\xa0', ' ')
+            except IndexError as e:
+                print(f'Error thrown on _pull_table_value_tr while trying to pull taxonomic info for {page}')
+                raise e
             return match
 
     return None
