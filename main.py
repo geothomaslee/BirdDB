@@ -8,9 +8,9 @@ from birddb.database import getBirdDataBase
 import polars as pl
 
 db = getBirdDataBase('D:/Wildlife Photos/Birds/Classification',force_overwrite=False)
-db.sort_new('https://ebird.org/checklist/S235566653')
+db.sort_new('https://ebird.org/checklist/S243047405')
 
-#qu.search('Purple gallinule')
+#qu = db.search('https://ebird.org/checklist/S235566653')
 #print(qu.df)
 #qu.deposit(60)
 
