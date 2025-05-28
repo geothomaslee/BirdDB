@@ -439,7 +439,7 @@ def _strip_species_name(spec: str) -> str:
             raise ValueError(f"Could not parse species name {error_spec}. Did you perhaps throw"
                              "an unexpected '_' at the back of your final name?") from e
 
-    for i, spec in range(len(species)):
+    for i, spec in enumerate(species):
         if spec == 'PurpleGallinule':
             species[i] = 'AmericanPurpleGallinule'
 
